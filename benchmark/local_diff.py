@@ -38,15 +38,17 @@ def inspect_frame_diff(num):
 
 
 def main():
-    num = 100000
+    num = 1000000
     start = time.time()
     uinspect_frame_diff(num)
-    t = time.time() - start
-    print("uinspect:", t)
+    t1 = time.time() - start
+    print("uinspect:", t1)
     start = time.time()
     inspect_frame_diff(num)
-    t = time.time() - start
-    print("inspect:", t)
+    t2 = time.time() - start
+    print("inspect:", t2)
+    print("speed:", t2 / t1)
+    print("{0:.2f} us/op".format(t1 / num * 1e6))
 
 
 if __name__ == "__main__":
