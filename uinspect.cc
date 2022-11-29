@@ -39,7 +39,7 @@ public:
         if (!frame_) return;
         known_vars_.clear();
         PyFrame_FastToLocals(frame_);
-        auto dict = py::reinterpret_steal<py::dict>(frame_->f_locals);
+        auto dict = py::cast<py::dict>(py::handle(frame_->f_locals));
         known_vars_.reserve(dict.size());
         for (auto handle : dict) {
             known_vars_.emplace_back(py::cast<std::string>(handle.first));
