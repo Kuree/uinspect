@@ -71,7 +71,10 @@ jobs:
           path: wheelhouse
       - name: Reorganize wheels
         working-directory: wheelhouse
-        run: mv */*.whl .
+        run: |
+          mv */*.whl .
+          find . -empty -type d -delete
+          ls -R .
 
       - name: Install wheel
         shell: bash
