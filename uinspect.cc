@@ -1,6 +1,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include "frameobject.h"
+
 namespace py = pybind11;
 
 class Frame {
@@ -10,7 +12,11 @@ public:
     Frame() : Frame(1) {}
 
     explicit Frame(uint32_t num_frames_back) {
+#if PY_MINOR_VERSION >= 10
+        frame_ = PyEval_GetFrame();
+#else
         frame_ = PyThreadState_Get()->frame;
+#endif
         uint32_t i = 0;
         while (frame_ && (++i) < num_frames_back) {
             frame_ = frame_->f_back;
