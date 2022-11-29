@@ -30,12 +30,13 @@ def test_local_diff():
     a = 1
     b = 2
     f1 = uinspect.Frame()
-    f1.locals
+    f1.collect_vars()
     c = 3
     f3 = uinspect.Frame()
-    f3.locals
+    f3.collect_vars()
     diff = f1.diff(f3)
-    print(diff)
+    assert "c" in diff
+    assert "f3" in diff
 
 
 if __name__ == "__main__":
