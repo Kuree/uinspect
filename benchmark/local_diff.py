@@ -8,11 +8,14 @@ def uinspect_frame_diff(num):
         a = 1
         b = 2
 
-        f1 = uinspect.Frame()
-        f1.collect_vars()
+        def func():
+            frame = uinspect.Frame(2)
+            frame.collect_vars()
+            return frame
+        f1 = func()
+
         c = 3
-        f2 = uinspect.Frame()
-        f2.collect_vars()
+        f2 = func()
 
         diff = f1.diff(f2)
 
@@ -22,11 +25,14 @@ def inspect_frame_diff(num):
         a = 1
         b = 2
 
-        f1 = inspect.currentframe()
-        names1 = list(f1.f_locals.keys())
+        def func():
+            frame = inspect.currentframe().f_back
+            names = list(frame.f_locals.keys())
+            return names
+
+        names1 = func()
         c = 3
-        f2 = inspect.currentframe()
-        names2 = list(f2.f_locals.keys())
+        names2 = func()
 
         diff = names2[len(names1):]
 
