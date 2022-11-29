@@ -29,20 +29,14 @@ def test_location():
 def test_local_diff():
     a = 1
     b = 2
-
-    def foo():
-        frame = uinspect.Frame(2)
-
-    l1 = foo()
-
+    f1 = uinspect.Frame()
+    f1.locals
     c = 3
-
-    def bar():
-        frame = uinspect.Frame(2)
-        return frame.diff()
-
-    print(bar())
+    f3 = uinspect.Frame()
+    f3.locals
+    diff = f1.diff(f3)
+    print(diff)
 
 
 if __name__ == "__main__":
-    test_frame_cache()
+    test_local_diff()
