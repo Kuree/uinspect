@@ -45,7 +45,8 @@ def benchmark(n):
     uinspect_time = end - start
     print("uinspect:", uinspect_time)
     print("Speed up:", inspect_time / uinspect_time)
+    print("{0:.2f} us/op".format(uinspect_time / n * 1e6))
 
 
 if __name__ == "__main__":
-    benchmark(500000)
+    benchmark(1000000)
