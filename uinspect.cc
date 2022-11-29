@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 class Frame {
 public:
-    explicit Frame(PyFrameObject *frame) : frame_(frame) {}
+    explicit Frame(PyFrameObject *frame) : frame_(frame) { setup_lineno(); }
 
     Frame() : Frame(1) {}
 
@@ -15,6 +15,7 @@ public:
         while (frame_ && (++i) < num_frames_back) {
             frame_ = frame_->f_back;
         }
+        setup_lineno();
     }
 
     [[nodiscard]] py::handle get_filename() const {
@@ -22,11 +23,6 @@ public:
         struct py::detail::string_caster<std::string> filename;
         py::handle handle(frame_->f_code->co_filename);
         return handle;
-    }
-
-    [[nodiscard]] uint32_t get_lineno() const {
-        if (!frame_) return 0;
-        return PyFrame_GetLineNumber(frame_);
     }
 
     [[nodiscard]] py::handle get_locals() const {
@@ -62,9 +58,13 @@ public:
         return res;
     }
 
+    int lineno = 0;
+
 private:
     PyFrameObject *frame_;
     std::vector<std::string> known_vars_;
+
+    void setup_lineno() { lineno = frame_ ? PyFrame_GetLineNumber(frame_) : 0; }
 };
 
 void init_frame(py::module &m) {
@@ -72,7 +72,7 @@ void init_frame(py::module &m) {
                      .def(py::init<>())
                      .def(py::init<uint32_t>(), py::arg("num_frames_back"));
     frame.def_property_readonly("filename", &Frame::get_filename);
-    frame.def_property_readonly("lineno", &Frame::get_lineno);
+    frame.def_readonly("lineno", &Frame::lineno);
     frame.def_property_readonly("locals", &Frame::get_locals);
     frame.def("diff", &Frame::diff);
     frame.def("collect_vars", &Frame::collect_vars);
@@ -84,7 +84,7 @@ void init_func(py::module &m) {
         [](uint32_t num_frames_back) {
             // this avoids creating an object in Python
             Frame f(num_frames_back);
-            return std::make_pair(f.get_filename(), f.get_lineno());
+            return std::make_pair(f.get_filename(), f.lineno);
         },
         py::arg("num_frames_back") = 1);
 }
