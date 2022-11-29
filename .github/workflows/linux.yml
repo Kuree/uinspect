@@ -17,7 +17,7 @@ jobs:
           git submodule sync --recursive
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
           
-      - name: Start manylinux
+      - name: Build using manylinux
         shell: bash
         run: scripts/build.sh
         env:
@@ -25,18 +25,38 @@ jobs:
 
       - name: Install deps
         shell: bash
-        run: |
-          sudo apt update && sudo apt install patchelf
-          pip3 install auditwheel pytest
+        run: pip3 install auditwheel
 
       - name: Fix wheel
         shell: bash
         run:
           auditwheel repair --plat manylinux2014_x86_64 dist/*
 
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.python-version }}
+          path: wheelhouse/*.whl
+
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download wheels
+        uses: actions/download-artifact@v3
+        with:
+          path: wheelhouse
+      - name: Reorganize wheels
+        working-directory: wheelhouse
+        run: mv */*.whl .
+
       - name: Install wheel
         shell: bash
-        run: pip3 install uinspect --find-links wheelhouse --no-index
+        run: |
+          pip3 install pytest
+          pip3 install uinspect --find-links wheelhouse --no-index
 
       - name: Test
         shell: bash
