@@ -18,9 +18,9 @@ def test_location_nested():
 
 
 def test_location():
-    frame_test_location = uinspect.Frame()
-    assert frame_test_location.filename == __file__
-    assert frame_test_location.lineno == get_line("    frame_test_location = uinspect.Frame()")
+    frame_test_location1 = uinspect.Frame()
+    assert frame_test_location1.filename == __file__
+    assert frame_test_location1.lineno == get_line("    frame_test_location1 = uinspect.Frame()")
     uf1, ul1 = uinspect.get_location()
     assert uf1 == __file__
     assert ul1 == get_line("    uf1, ul1 = uinspect.get_location()")

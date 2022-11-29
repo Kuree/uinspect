@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ cp37-37m, cp38-cp38, cp39-cp39, cp310-cp310, cp311-311-cp311 ]
+        python-version: [ cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310, cp311-cp311 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,3 +22,22 @@ jobs:
         run: scripts/build.sh
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+
+      - name: Install deps
+        shell: bash
+        run: |
+          sudo apt update && sudo apt install patchelf
+          pip3 install auditwheel pytest
+
+      - name: Fix wheel
+        shell: bash
+        run:
+          auditwheel repair --plat manylinux2014_x86_64 dist/*
+
+      - name: Install wheel
+        shell: bash
+        run: pip3 install uinspect --find-links wheelhouse --no-index
+
+      - name: Test
+        shell: bash
+        run: pytest tests/ -v
