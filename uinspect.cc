@@ -7,7 +7,7 @@ static Py_ssize_t code_extra_index = 0;
 
 class Frame {
 public:
-    explicit Frame(PyFrameObject *frame) : frame_(frame) { }
+    explicit Frame(PyFrameObject *frame) : frame_(frame) { compute_index(); }
 
     Frame() : Frame(1) {}
 
@@ -17,8 +17,7 @@ public:
         while (frame_ && (++i) < num_frames_back) {
             frame_ = frame_->f_back;
         }
-
-        update();
+        compute_index();
     }
 
     [[nodiscard]] py::handle get_filename() const {
@@ -28,33 +27,31 @@ public:
         return handle;
     }
 
+    [[nodiscard]] uint32_t get_lineno() const {
+        if (!frame_) return 0;
+        return PyFrame_GetLineNumber(frame_);
+    }
+
     [[nodiscard]] py::handle get_locals() const {
         if (!frame_) return py::none();
         PyFrame_FastToLocals(frame_);
         return frame_->f_locals;
     }
 
-    py::dict update() {
-        if (!frame_) return {};
-        lineno = PyFrame_GetLineNumber(frame_);
-        /*
-        py::dict res;
-        if (stack_head_) {
-            while (stack_head_ != frame_->f_valuestack) {
-                printf("%p\n", stack_head_);
-                stack_head_++;
-            }
+    py::dict diff(Frame &frame) const {
+        if (frame.index_ > index_) {
+            
         }
-
-        stack_head_ = frame_->f_valuestack;
-        return res;
-         */
+        return {};
     }
-
-    uint32_t lineno = 0;
 
 private:
     PyFrameObject *frame_;
+    int index_ = 0;
+
+    inline void compute_index() {
+        if (frame_) index_ = frame_->f_stackdepth;
+    }
 };
 
 Frame *get_frame(uint32_t num_frames_back) {
@@ -84,9 +81,8 @@ void init_frame(py::module &m) {
                      .def(py::init(&get_frame), py::arg("num_frames_back") = 1,
                           py::return_value_policy::reference_internal);
     frame.def_property_readonly("filename", &Frame::get_filename);
-    frame.def_readonly("lineno", &Frame::lineno);
+    frame.def_property_readonly("lineno", &Frame::get_lineno);
     frame.def_property_readonly("locals", &Frame::get_locals);
-    frame.def("update", &Frame::update);
 }
 
 void init_func(py::module &m) {
@@ -95,20 +91,12 @@ void init_func(py::module &m) {
         [](uint32_t num_frames_back) {
             // this avoids creating an object in Python
             Frame f(num_frames_back);
-            return std::make_pair(f.get_filename(), f.lineno);
+            return std::make_pair(f.get_filename(), f.get_lineno());
         },
         py::arg("num_frames_back") = 1);
 }
 
-void free_storage(void *ptr) {
-    auto *frame = reinterpret_cast<Frame *>(ptr);
-    delete frame;
-}
-
-void init_code_extra_index() { code_extra_index = _PyEval_RequestCodeExtraIndex(&free_storage); }
-
 PYBIND11_MODULE(uinspect, m) {
-    init_code_extra_index();
     init_frame(m);
     init_func(m);
 }

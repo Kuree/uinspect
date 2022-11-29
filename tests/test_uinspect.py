@@ -26,12 +26,6 @@ def test_location():
     assert ul1 == get_line("    uf1, ul1 = uinspect.get_location()")
 
 
-def test_frame_cache():
-    f1 = uinspect.Frame()
-    f2 = uinspect.Frame()
-    assert id(f1) == id(f2)
-
-
 def test_local_diff():
     a = 1
     b = 2
