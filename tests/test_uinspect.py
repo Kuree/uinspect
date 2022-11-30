@@ -39,5 +39,11 @@ def test_local_diff():
     assert "f3" in diff
 
 
+def test_globals():
+    frame = uinspect.Frame()
+    globals = frame.globals
+    print(globals["__name__"])
+
+
 if __name__ == "__main__":
-    test_local_diff()
+    test_globals()

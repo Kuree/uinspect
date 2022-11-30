@@ -64,6 +64,11 @@ public:
         return res;
     }
 
+    [[nodiscard]] py::dict get_globals() const {
+        if (!frame_) return {};
+        return py::cast<py::dict>(frame_->f_globals);
+    }
+
     int lineno = 0;
 
 private:
@@ -82,6 +87,7 @@ void init_frame(py::module &m) {
     frame.def_property_readonly("locals", &Frame::get_locals);
     frame.def("diff", &Frame::diff);
     frame.def("collect_vars", &Frame::collect_vars);
+    frame.def_property_readonly("globals", &Frame::get_globals);
 }
 
 void init_func(py::module &m) {
