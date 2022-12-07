@@ -45,5 +45,14 @@ def test_globals():
     print(globals["__name__"])
 
 
+def test_walker():
+    from foo import get_loc
+    # reuse walker to avoid creating this object again and again in Python
+    walker0 = uinspect.FrameWalker({"foo.py"})
+    uf2, ul2 = get_loc(walker0)
+    assert uf2 == __file__
+    assert ul2 == get_line("    uf2, ul2 = get_loc(walker0)")
+
+
 if __name__ == "__main__":
-    test_globals()
+    test_walker()

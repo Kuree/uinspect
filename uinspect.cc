@@ -1,9 +1,17 @@
+#include <filesystem>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "frameobject.h"
-
 namespace py = pybind11;
+
+PyFrameObject *get_frame() {
+#if PY_MINOR_VERSION >= 10
+    return PyEval_GetFrame();
+#else
+    return PyThreadState_Get()->frame;
+#endif
+}
 
 class Frame {
 public:
@@ -12,11 +20,7 @@ public:
     Frame() : Frame(1) {}
 
     explicit Frame(uint32_t num_frames_back) {
-#if PY_MINOR_VERSION >= 10
-        frame_ = PyEval_GetFrame();
-#else
-        frame_ = PyThreadState_Get()->frame;
-#endif
+        frame_ = get_frame();
         uint32_t i = 0;
         while (frame_ && (++i) < num_frames_back) {
             frame_ = frame_->f_back;
@@ -78,6 +82,31 @@ private:
     void setup_lineno() { lineno = frame_ ? PyFrame_GetLineNumber(frame_) : 0; }
 };
 
+class FrameWalker {
+public:
+    explicit FrameWalker(std::unordered_set<std::string> filenames)
+        : filenames_(std::move(filenames)) {}
+
+    std::pair<std::string, uint32_t> get_location() const {
+        auto *frame = get_frame();
+
+        while (frame) {
+            auto filename = py::cast<std::string>(frame->f_code->co_filename);
+            auto basename = std::filesystem::path(filename).filename().string();
+            if (filenames_.find(basename) == filenames_.end()) {
+                uint32_t line = PyFrame_GetLineNumber(frame);
+                return {filename, line};
+            }
+            frame = frame->f_back;
+        }
+
+        return {};
+    }
+
+private:
+    std::unordered_set<std::string> filenames_;
+};
+
 void init_frame(py::module &m) {
     auto frame = py::class_<Frame>(m, "Frame")
                      .def(py::init<>())
@@ -88,6 +117,12 @@ void init_frame(py::module &m) {
     frame.def("diff", &Frame::diff);
     frame.def("collect_vars", &Frame::collect_vars);
     frame.def_property_readonly("globals", &Frame::get_globals);
+}
+
+void init_frame_walker(py::module &m) {
+    auto walker = py::class_<FrameWalker>(m, "FrameWalker");
+    walker.def(py::init<std::unordered_set<std::string>>());
+    walker.def("get_location", &FrameWalker::get_location);
 }
 
 void init_func(py::module &m) {
@@ -103,5 +138,6 @@ void init_func(py::module &m) {
 
 PYBIND11_MODULE(uinspect, m) {
     init_frame(m);
+    init_frame_walker(m);
     init_func(m);
 }
