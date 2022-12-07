@@ -130,6 +130,7 @@ setup(
     version="0.0.2",
     author="Keyi Zhang",
     author_email="keyi@cs.stanford.edu",
+    url="https://github.com/Kuree/uinspect",
     description="Ultra-fast inspect functions for Python",
     long_description=long_description,
     ext_modules=[CMakeExtension("uinspect")],
