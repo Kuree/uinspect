@@ -4,6 +4,7 @@
 #include "pybind11/stl.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 PyFrameObject *get_frame() {
 #if PY_MINOR_VERSION >= 10
@@ -84,18 +85,22 @@ private:
 
 class FrameWalker {
 public:
-    explicit FrameWalker(std::unordered_set<std::string> filenames)
-        : filenames_(std::move(filenames)) {}
+    FrameWalker(std::unordered_set<std::string> filenames, bool absolute_path)
+        : filenames_(std::move(filenames)), absolute_path_(absolute_path) {}
 
     std::pair<std::string, uint32_t> get_location() const {
         auto *frame = get_frame();
 
         while (frame) {
             auto filename = py::cast<std::string>(frame->f_code->co_filename);
-            auto basename = std::filesystem::path(filename).filename().string();
-            if (filenames_.find(basename) == filenames_.end()) {
+            auto res = filename;
+            if (!absolute_path_) {
+                filename = std::filesystem::path(filename).filename().string();
+            }
+
+            if (filenames_.find(filename) == filenames_.end()) {
                 uint32_t line = PyFrame_GetLineNumber(frame);
-                return {filename, line};
+                return {res, line};
             }
             frame = frame->f_back;
         }
@@ -105,6 +110,7 @@ public:
 
 private:
     std::unordered_set<std::string> filenames_;
+    bool absolute_path_ = false;
 };
 
 void init_frame(py::module &m) {
@@ -121,7 +127,8 @@ void init_frame(py::module &m) {
 
 void init_frame_walker(py::module &m) {
     auto walker = py::class_<FrameWalker>(m, "FrameWalker");
-    walker.def(py::init<std::unordered_set<std::string>>());
+    walker.def(py::init<std::unordered_set<std::string>, bool>(), "blocklist"_a,
+               "absolute_path"_a = false);
     walker.def("get_location", &FrameWalker::get_location);
 }
 
