@@ -52,6 +52,9 @@ def test_walker():
     uf2, ul2 = get_loc(walker0)
     assert uf2 == __file__
     assert ul2 == get_line("    uf2, ul2 = get_loc(walker0)")
+    walker1 = uinspect.FrameWalker({""})
+    uf3, _ = get_loc(walker1)
+    assert "foo.py" in uf3
 
 
 if __name__ == "__main__":
