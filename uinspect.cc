@@ -6,7 +6,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-PyFrameObject *get_frame() {
+inline PyFrameObject *get_frame() {
 #if PY_MINOR_VERSION >= 10
     return PyEval_GetFrame();
 #else
@@ -14,7 +14,7 @@ PyFrameObject *get_frame() {
 #endif
 }
 
-PyCodeObject *get_code(PyFrameObject *frame) {
+inline PyCodeObject *get_code(PyFrameObject *frame) {
 #if PY_MINOR_VERSION >= 10
     return PyFrame_GetCode(frame);
 #else
@@ -22,11 +22,28 @@ PyCodeObject *get_code(PyFrameObject *frame) {
 #endif
 }
 
-PyFrameObject *get_frame_back(PyFrameObject *frame) {
+inline PyFrameObject *get_frame_back(PyFrameObject *frame) {
 #if PY_MINOR_VERSION >= 9
     return PyFrame_GetBack(frame);
 #else
     return frame->f_back;
+#endif
+}
+
+inline PyObject *get_globals(PyFrameObject *frame) {
+#if PY_MINOR_VERSION >= 11
+    return PyFrame_GetGlobals(frame);
+#else
+    return frame->f_globals;
+#endif
+}
+
+inline PyObject *get_locals(PyFrameObject *frame) {
+    PyFrame_FastToLocals(frame);
+#if PY_MINOR_VERSION >= 11
+    return PyFrame_GetLocals(frame);
+#else
+    return frame->f_locals;
 #endif
 }
 
@@ -55,15 +72,14 @@ public:
 
     [[nodiscard]] py::handle get_locals() const {
         if (!frame_) return py::none();
-        PyFrame_FastToLocals(frame_);
-        return frame_->f_locals;
+        return ::get_locals(frame_);
     }
 
     void collect_vars() {
         if (!frame_) return;
         known_vars_.clear();
         PyFrame_FastToLocals(frame_);
-        auto dict = py::cast<py::dict>(py::handle(frame_->f_locals));
+        auto dict = py::cast<py::dict>(get_locals());
         known_vars_.reserve(dict.size());
         for (auto handle : dict) {
             known_vars_.emplace_back(py::cast<std::string>(handle.first));
@@ -88,7 +104,7 @@ public:
 
     [[nodiscard]] py::dict get_globals() const {
         if (!frame_) return {};
-        return py::cast<py::dict>(frame_->f_globals);
+        return py::cast<py::dict>(::get_globals(frame_));
     }
 
     int lineno = 0;
