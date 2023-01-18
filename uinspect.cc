@@ -14,6 +14,14 @@ PyFrameObject *get_frame() {
 #endif
 }
 
+PyCodeObject *get_code(PyFrameObject *frame) {
+#if PY_MINOR_VERSION >= 10
+    return PyFrame_GetCode(frame);
+#else
+    return frame->f_code;
+#endif
+}
+
 class Frame {
 public:
     explicit Frame(PyFrameObject *frame) : frame_(frame) { setup_lineno(); }
@@ -32,7 +40,8 @@ public:
     [[nodiscard]] py::handle get_filename() const {
         if (!frame_) return py::none();
         struct py::detail::string_caster<std::string> filename;
-        py::handle handle(frame_->f_code->co_filename);
+        auto *code = get_code(frame_);
+        py::handle handle(code->co_filename);
         return handle;
     }
 
@@ -92,7 +101,8 @@ public:
         auto *frame = get_frame();
 
         while (frame) {
-            auto filename = py::cast<std::string>(frame->f_code->co_filename);
+            auto *code = get_code(frame);
+            auto filename = py::cast<std::string>(code->co_filename);
             auto res = filename;
             if (!absolute_path_) {
                 filename = std::filesystem::path(filename).filename().string();
