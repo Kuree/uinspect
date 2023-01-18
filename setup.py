@@ -127,7 +127,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as f:
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="uinspect",
-    version="0.0.3",
+    version="0.0.4",
     author="Keyi Zhang",
     author_email="keyi@cs.stanford.edu",
     url="https://github.com/Kuree/uinspect",
