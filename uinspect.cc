@@ -22,6 +22,14 @@ PyCodeObject *get_code(PyFrameObject *frame) {
 #endif
 }
 
+PyFrameObject *get_frame_back(PyFrameObject *frame) {
+#if PY_MINOR_VERSION >= 9
+    return PyFrame_GetBack(frame);
+#else
+    return frame->f_back;
+#endif
+}
+
 class Frame {
 public:
     explicit Frame(PyFrameObject *frame) : frame_(frame) { setup_lineno(); }
@@ -32,7 +40,7 @@ public:
         frame_ = get_frame();
         uint32_t i = 0;
         while (frame_ && (++i) < num_frames_back) {
-            frame_ = frame_->f_back;
+            frame_ = get_frame_back(frame_);
         }
         setup_lineno();
     }
@@ -112,7 +120,7 @@ public:
                 uint32_t line = PyFrame_GetLineNumber(frame);
                 return {res, line};
             }
-            frame = frame->f_back;
+            frame = get_frame_back(frame);
         }
 
         return {};
