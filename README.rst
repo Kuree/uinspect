@@ -1,7 +1,7 @@
 uinspect
 ========
 
-This is a small Python package that offers :sub:`fast` runtime inspection similar to that of ``inspect`` module in Python. To install, simply do
+This is a small Python package that offers fast runtime inspection similar to that of ``inspect`` module in Python. To install, simply do
 
 ::
 
