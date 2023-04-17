@@ -51,9 +51,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.1
         env:
-          CIBW_BUILD: cp${{ matrix.python-version[1] }}-macosx_universal2
-          CIBW_ARCHS_MACOS: universal2
-          CIBW_TEST_SKIP: '*universal2:arm64'
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_TEST_SKIP: '*arm64'
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
