@@ -56,7 +56,7 @@ jobs:
         run: pip3 install cibuildwheel
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python3 -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: cp${{ matrix.python }}-macosx_universal2
           CIBW_ARCHS_MACOS: universal2
