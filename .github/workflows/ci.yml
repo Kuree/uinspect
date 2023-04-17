@@ -48,11 +48,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version[0] }}
 
-      - name: Install cibuildwheel
-        run: pip3 install cibuildwheel
-
       - name: Build wheels
-        run: python3 -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v2.12.1
         env:
           CIBW_BUILD: cp${{ matrix.python }}-macosx_universal2
           CIBW_ARCHS_MACOS: universal2
