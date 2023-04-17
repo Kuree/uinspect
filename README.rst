@@ -27,3 +27,13 @@ The following benchmark is generated from running the scripts in ``benchmark/``.
 It turns out that the ``uinspect`` does not speed up the local variable calculation. This is because we have to run an expensive Python C API call regardless of whether it’s ``uinspect`` or ``inspect``. As a result, the overhead is caused by the fact that ``uinspect`` needs to convert Python object to C++ object.
 
 The lesson is to use ``inspect`` module for any local variables related manipulation since it’s faster, but use ``uinspect`` to obtain source location.
+
+install from source
+===================
+
+::
+
+   git clone https://github.com/Kuree/uinspect.git
+   cd uinspect
+   git submodule update --init
+   python setup.py install
