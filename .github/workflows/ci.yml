@@ -32,12 +32,47 @@ jobs:
         with:
           name: ${{ matrix.python-version }}
           path: wheelhouse/*.whl
+          
+  macos:
+    strategy:
+      matrix:
+        python-version: [ ["3.7", "37"], 
+                          ["3.8", "38"], 
+                          ["3.9", "39"], 
+                          ["3.10", "3.1"],
+                          ["3.11", "311"] ]
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        name: Setting up Python env
+        with:
+          python-version: ${{ matrix.python-version[0] }}
 
-  macos-win:
+      - name: Install cibuildwheel
+        run: pip3 install cibuildwheel
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: cp${{ matrix.python }}-macosx_universal2
+          CIBW_ARCHS_MACOS: universal2
+          CIBW_TEST_SKIP: '*universal2:arm64'
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.python-version[1] }}-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+win:
     strategy:
       matrix:
         python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
-        os: [macos-latest, windows-latest]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -53,8 +88,6 @@ jobs:
           pip3 install wheel
           python3 setup.py bdist_wheel
           mv dist wheelhouse
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.15"
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
@@ -64,7 +97,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: [linux, macos-win]
+    needs: [linux, macos, win]
     steps:
       - uses: actions/checkout@v3
       - name: Download wheels
