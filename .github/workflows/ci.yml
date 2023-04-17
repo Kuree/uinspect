@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ cp37-cp37m, cp38-cp38, cp39-cp39, cp310-cp310, cp311-cp311]
+        python-version: [ cp38-cp38, cp39-cp39, cp310-cp310, cp311-cp311]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -63,7 +63,7 @@ jobs:
   win:
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -89,7 +89,7 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
     needs: [linux, macos, win]
